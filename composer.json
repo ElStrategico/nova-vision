@@ -9,7 +9,8 @@
     }],
     "minimum-stability": "dev",
     "require": {
-        "vlucas/phpdotenv": "^5.3@dev"
+        "vlucas/phpdotenv": "^5.3@dev",
+        "ext-pdo": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0@dev"
