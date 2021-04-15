@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6879711d3fe5a546edda7824210dd9f1",
+    "content-hash": "8f5515df70e711269c84167536dcdbcf",
     "packages": [
         {
             "name": "graham-campbell/result-type",
@@ -436,6 +436,75 @@
                 }
             ],
             "time": "2021-01-20T15:23:13+00:00"
+        },
+        {
+            "name": "wapmorgan/morphos",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/Morphos.git",
+                "reference": "fdf08ff3979a0c1ac4155d7fc1f502718f31b6ec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/Morphos/zipball/fdf08ff3979a0c1ac4155d7fc1f502718f31b6ec",
+                "reference": "fdf08ff3979a0c1ac4155d7fc1f502718f31b6ec",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8"
+            },
+            "suggest": {
+                "ext-readline": "For using interactive version of script"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/English/functions.php",
+                    "src/Russian/functions.php"
+                ],
+                "psr-4": {
+                    "morphos\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sergey Vanyushin",
+                    "email": "wapmorgan@gmail.com",
+                    "role": "developer"
+                }
+            ],
+            "description": "A morphological solution for Russian and English language written completely in PHP. Provides classes to inflect personal names, geographical names, decline and pluralize nouns, generate cardinal and ordinal numerals, spell out money amounts and time.",
+            "homepage": "http://morphos.io",
+            "keywords": [
+                "Numerals",
+                "adjectives",
+                "cardinal",
+                "declension",
+                "english",
+                "geographical names",
+                "human-friendly",
+                "inflection",
+                "language",
+                "money",
+                "morphology",
+                "nouns",
+                "ordinal",
+                "personal names",
+                "pluralization",
+                "russian",
+                "spelling",
+                "time"
+            ],
+            "time": "2021-03-01T02:17:35+00:00"
         }
     ],
     "packages-dev": [
@@ -2059,11 +2128,14 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "vlucas/phpdotenv": 20,
+        "wapmorgan/morphos": 20,
         "phpunit/phpunit": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-pdo": "*"
+    },
     "platform-dev": [],
     "plugin-api-version": "1.1.0"
 }
