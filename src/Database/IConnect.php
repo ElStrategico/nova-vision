@@ -34,4 +34,13 @@ interface IConnect
      * @return array|null
      */
     public function fetch(string $sql, array $prepareParams = []);
+
+    /**
+     * Fetch a scalar value from database by SQL command
+     *
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function scalarFetch(string $sql, array $prepareParams = []);
 }

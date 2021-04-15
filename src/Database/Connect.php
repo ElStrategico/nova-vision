@@ -56,6 +56,14 @@ class Connect implements IConnect
         $state = $this->pdo->prepare($sql);
         $state->execute($prepareParams);
 
-        return $state->fetchAll();
+        return $state->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function scalarFetch(string $sql, array $prepareParams = [])
+    {
+        $state = $this->pdo->prepare($sql);
+        $state->execute($prepareParams);
+
+        return $state->fetchColumn();
     }
 }
