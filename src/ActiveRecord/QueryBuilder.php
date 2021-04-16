@@ -26,9 +26,9 @@ class QueryBuilder
     private Query $query;
 
     /**
-     * @var string
+     * @var mixed
      */
-    private string $targetModel;
+    private $targetModel;
 
     /**
      * @var string
@@ -43,9 +43,9 @@ class QueryBuilder
     /**
      * @param IConnect $connect
      * @param string $targetTable
-     * @param string $targetModel
+     * @param mixed $targetModel
      */
-    public function __construct(IConnect $connect, string $targetTable, string $targetModel)
+    public function __construct(IConnect $connect, string $targetTable, $targetModel = null)
     {
         $this->query = new Query();
         $this->connect = $connect;
@@ -53,22 +53,74 @@ class QueryBuilder
         $this->targetTable = $targetTable;
     }
 
+    private function beforeBuild()
+    {
+        if(!$this->query->getSelect())
+        {
+            $this->query->setSelect(Aliases::ALL, $this->targetTable);
+        }
+    }
+
+    /**
+     * @return string
+     */
     private function build()
     {
-        $sql = $this->query->getSelect();
-        $sql .= " " . $this->query->getWhere();
+        $this->beforeBuild();
 
-        return $sql;
+        return $this->query->getAsString();
     }
 
     /**
      * @param array $columns
      * @return QueryBuilder
      */
-    public function select($columns = [Aliases::ALL])
+    public function select(array $columns = [Aliases::ALL])
     {
         $implodedColumns = implode(', ', $columns);
         $this->query->setSelect($implodedColumns, $this->targetTable);
+
+        return $this;
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     * @return $this
+     */
+    public function innerJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->query->setInnerJoin($table, $column, $operator, $foreignColumn);
+
+        return $this;
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     * @return $this
+     */
+    public function leftJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->query->setLeftJoin($table, $column, $operator, $foreignColumn);
+
+        return $this;
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     * @return $this
+     */
+    public function rightJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->query->setRightJoin($table, $column, $operator, $foreignColumn);
 
         return $this;
     }
@@ -116,6 +168,40 @@ class QueryBuilder
     }
 
     /**
+     * @param int $limit
+     * @return $this
+     */
+    public function limit(int $limit)
+    {
+        $this->query->setLimit($limit);
+
+        return $this;
+    }
+
+    /**
+     * @param string $column
+     * @param string $sortType
+     * @return $this
+     */
+    public function orderBy(string $column, string $sortType = Aliases::ASC_SORT)
+    {
+        $this->query->setOrderBy($column, $sortType);
+
+        return $this;
+    }
+
+    /**
+     * @param string $column
+     * @return $this
+     */
+    public function groupBy(string $column)
+    {
+        $this->query->setGroupBy($column);
+
+        return $this;
+    }
+
+    /**
      * @param string $column
      * @return mixed
      */
@@ -126,18 +212,89 @@ class QueryBuilder
     }
 
     /**
-     * @return Collection
+     * @param string $column
+     * @return mixed
+     */
+    public function min(string $column)
+    {
+        $this->query->setMinAggregation($column, $this->targetTable);
+        return $this->connect->scalarFetch($this->build());
+    }
+
+    /**
+     * @param string $column
+     * @return mixed
+     */
+    public function avg(string $column)
+    {
+        $this->query->setAvgAggregation($column, $this->targetTable);
+        return $this->connect->scalarFetch($this->build());
+    }
+
+    /**
+     * @param string $column
+     * @return mixed
+     */
+    public function sum(string $column)
+    {
+        $this->query->setSumAggregation($column, $this->targetTable);
+        return $this->connect->scalarFetch($this->build());
+    }
+
+    /**
+     * @param string $column
+     * @return mixed
+     */
+    public function count(string $column)
+    {
+        $this->query->setCountAggregation($column, $this->targetTable);
+        return $this->connect->scalarFetch($this->build());
+    }
+
+    /**
+     * @return $this
+     */
+    public function asArray()
+    {
+        $this->targetModel = null;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
      */
     public function get()
     {
-        if(!$this->query->getSelect())
+        $records = $this->connect->fetch($this->build(), $this->preparedParams);
+        if(!$this->targetModel)
         {
-            $this->query->setSelect(Aliases::ALL, $this->targetTable);
+            return $records;
         }
 
         return FactoryCollection::factory(
             $this->targetModel,
-            $this->connect->fetch($this->build(), $this->preparedParams)
+            $records
+        );
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function first()
+    {
+        if(!$record = $this->connect->fetchOne($this->build(), $this->preparedParams))
+        {
+            return null;
+        }
+        if(!$this->targetModel)
+        {
+            return $record;
+        }
+
+        return FactoryModel::factory(
+            $this->targetModel,
+            $record
         );
     }
 }
