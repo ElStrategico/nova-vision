@@ -36,6 +36,15 @@ interface IConnect
     public function fetch(string $sql, array $prepareParams = []);
 
     /**
+     * Fetch a single row from database by SQL command
+     *
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function fetchOne(string $sql, array $prepareParams = []);
+
+    /**
      * Fetch a scalar value from database by SQL command
      *
      * @param string $sql
