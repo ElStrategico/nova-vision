@@ -7,8 +7,8 @@ use NovaVision\Core\BaseObject;
 use NovaVision\Database\Connect;
 use NovaVision\Utility\FactoryConnect;
 use morphos\English\NounPluralization;
-use NovaVision\ActiveRecord\QueryBuilder;
 use NovaVision\Configurations\EnvConfig;
+use NovaVision\ActiveRecord\QueryBuilder;
 
 /**
  * Class Model
@@ -21,6 +21,13 @@ abstract class Model extends BaseObject
      * @var string
      */
     protected string $table = '';
+
+    /**
+     * Properties for work with save, update methods
+     *
+     * @var array
+     */
+    protected array $properties = [];
 
     /**
      * Model constructor.
