@@ -11,12 +11,47 @@ class Query
     /**
      * @var string
      */
-    private $select = '';
+    private string $select = '';
 
     /**
      * @var array
      */
-    private $where = [];
+    private array $joins = [];
+
+    /**
+     * @var array
+     */
+    private array $where = [];
+
+    /**
+     * @var string
+     */
+    private string $groupBy = '';
+
+    /**
+     * @var string
+     */
+    private string $orderBy = '';
+
+    /**
+     * @var string
+     */
+    private string $limit = '';
+
+    /**
+     * @return string
+     */
+    public function getAsString()
+    {
+        $sql = $this->getSelect();
+        $sql .= " " . $this->getJoins();
+        $sql .= " " . $this->getGroupBy();
+        $sql .= " " . $this->getWhere();
+        $sql .= " " . $this->getOrderBy();
+        $sql .= " " . $this->getLimit();
+
+        return $sql;
+    }
 
     /**
      * @return string
@@ -27,20 +62,20 @@ class Query
     }
 
     /**
-     * @return string
-     */
-    public function getWhere()
-    {
-        return implode(' ', $this->where);
-    }
-
-    /**
      * @param string $columns
      * @param string $table
      */
     public function setSelect(string $columns, string $table)
     {
         $this->select = "SELECT $columns FROM $table";
+    }
+
+    /**
+     * @return string
+     */
+    public function getWhere()
+    {
+        return implode(' ', $this->where);
     }
 
     /**
@@ -77,12 +112,161 @@ class Query
     {
         $this->where[] = "OR $column $operator $value";
     }
+
+    /**
+     * @return string
+     */
+    public function getGroupBy()
+    {
+        return $this->groupBy;
+    }
+
+    /**
+     * @param string $column
+     */
+    public function setGroupBy(string $column)
+    {
+        $this->groupBy = "GROUP BY $column";
+    }
+
+    public function getJoins()
+    {
+        return implode(' ', $this->joins);
+    }
+
+    /**
+     * @param string $type
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     */
+    public function setJoin(
+        string $type,
+        string $table,
+        string $column,
+        string $operator,
+        string $foreignColumn
+    )
+    {
+        $this->joins[] = "$type JOIN $table ON $column $operator $foreignColumn";
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     */
+    public function setInnerJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->setJoin('INNER', $table, $column, $operator, $foreignColumn);
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     */
+    public function setLeftJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->setJoin('LEFT', $table, $column, $operator, $foreignColumn);
+    }
+
+    /**
+     * @param string $table
+     * @param string $column
+     * @param string $operator
+     * @param string $foreignColumn
+     */
+    public function setRightJoin(string $table, string $column, string $operator, string $foreignColumn)
+    {
+        $this->setJoin('RIGHT', $table, $column, $operator, $foreignColumn);
+    }
+
+    /**
+     * @return string
+     */
+    public function getLimit()
+    {
+        return $this->limit;
+    }
+
+    /**
+     * @param int $limit
+     */
+    public function setLimit(int $limit)
+    {
+        $this->limit = "LIMIT $limit";
+    }
+
+    public function getOrderBy()
+    {
+        return $this->orderBy;
+    }
+
+    /**
+     * @param string $column
+     * @param string $type
+     */
+    public function setOrderBy(string $column, string $type)
+    {
+        $this->orderBy = "ORDER BY $column $type";
+    }
+
+    /**
+     * @param string $function
+     * @param string $aggregatable
+     * @param string $table
+     */
+    public function setAggregationFunction(string $function, string $aggregatable, string $table)
+    {
+        $this->setSelect("$function($aggregatable)", $table);
+    }
+
     /**
      * @param string $aggregatable
      * @param string $table
      */
     public function setMaxAggregation(string $aggregatable, string $table)
     {
-        $this->setSelect("MAX($aggregatable)", $table);
+        $this->setAggregationFunction("MAX", $aggregatable, $table);
+    }
+
+    /**
+     * @param string $aggregatable
+     * @param string $table
+     */
+    public function setMinAggregation(string $aggregatable, string $table)
+    {
+        $this->setAggregationFunction("MIN", $aggregatable, $table);
+    }
+
+    /**
+     * @param string $aggregatable
+     * @param string $table
+     */
+    public function setAvgAggregation(string $aggregatable, string $table)
+    {
+        $this->setAggregationFunction("AVG", $aggregatable, $table);
+    }
+
+    /**
+     * @param string $aggregatable
+     * @param string $table
+     */
+    public function setSumAggregation(string $aggregatable, string $table)
+    {
+        $this->setAggregationFunction("SUM", $aggregatable, $table);
+    }
+
+    /**
+     * @param string $aggregatable
+     * @param string $table
+     */
+    public function setCountAggregation(string $aggregatable, string $table)
+    {
+        $this->setAggregationFunction("COUNT", $aggregatable, $table);
     }
 }
