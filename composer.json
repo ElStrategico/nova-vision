@@ -11,10 +11,12 @@
     "require": {
         "vlucas/phpdotenv": "^5.3@dev",
         "ext-pdo": "*",
-        "wapmorgan/morphos": "dev-master"
+        "wapmorgan/morphos": "dev-master",
+        "joachim-n/case-converter": "1.0.x-dev"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0@dev"
+        "phpunit/phpunit": "^10.0@dev",
+        "kint-php/kint": "dev-master"
     },
     "autoload": {
         "psr-4": {
