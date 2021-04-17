@@ -14,6 +14,11 @@ class Query
     private string $select = '';
 
     /**
+     * @var string
+     */
+    private string $update = '';
+
+    /**
      * @var array
      */
     private array $joins = [];
@@ -44,6 +49,7 @@ class Query
     public function getAsString()
     {
         $sql = $this->getSelect();
+        $sql .= " " . $this->getUpdate();
         $sql .= " " . $this->getJoins();
         $sql .= " " . $this->getGroupBy();
         $sql .= " " . $this->getWhere();
@@ -51,6 +57,14 @@ class Query
         $sql .= " " . $this->getLimit();
 
         return $sql;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getAsString();
     }
 
     /**
@@ -68,6 +82,19 @@ class Query
     public function setSelect(string $columns, string $table)
     {
         $this->select = "SELECT $columns FROM $table";
+    }
+
+    /**
+     * @return string
+     */
+    public function getUpdate()
+    {
+        return $this->update;
+    }
+
+    public function setUpdate(string $table, string $data)
+    {
+        $this->update = "UPDATE $table SET $data";
     }
 
     /**
@@ -268,5 +295,16 @@ class Query
     public function setCountAggregation(string $aggregatable, string $table)
     {
         $this->setAggregationFunction("COUNT", $aggregatable, $table);
+    }
+
+    /**
+     * @param string $table
+     * @param string $columns
+     * @param string $values
+     * @return string
+     */
+    public static function insertPreset(string $table, string $columns, string $values)
+    {
+        return "INSERT INTO $table ($columns) VALUES ($values)";
     }
 }
