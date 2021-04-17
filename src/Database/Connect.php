@@ -74,4 +74,14 @@ class Connect implements IConnect
 
         return $state->fetchColumn();
     }
+
+    /**
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function insert(string $sql, array $prepareParams = [])
+    {
+        return $this->execute($sql, $prepareParams) ? $this->pdo->lastInsertId() : false;
+    }
 }

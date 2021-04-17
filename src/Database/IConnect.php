@@ -27,6 +27,13 @@ interface IConnect
     public function execute(string $sql, array $prepareParams = []) : bool;
 
     /**
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function insert(string $sql, array $prepareParams = []);
+
+    /**
      * Fetch a data from database by SQL command
      *
      * @param string $sql
