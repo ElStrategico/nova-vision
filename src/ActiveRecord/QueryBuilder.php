@@ -5,6 +5,7 @@ namespace NovaVision\ActiveRecord;
 
 use NovaVision\Database\IConnect;
 use NovaVision\ActiveRecord\Query;
+use NovaVision\Helpers\ArrayHelper;
 use NovaVision\Utility\FactoryModel;
 use NovaVision\Utility\FactoryCollection;
 
@@ -79,6 +80,23 @@ class QueryBuilder
     {
         $implodedColumns = implode(', ', $columns);
         $this->query->setSelect($implodedColumns, $this->targetTable);
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function update(array $data)
+    {
+        $updatable = [];
+        foreach($data as $column => $value)
+        {
+            $updatable[] = "$column = $value";
+        }
+
+        $this->query->setUpdate(implode(',', $updatable), $this->targetTable);
 
         return $this;
     }
@@ -296,5 +314,32 @@ class QueryBuilder
             $this->targetModel,
             $record
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function execute()
+    {
+        return $this->connect->execute($this->build(), $this->preparedParams);
+    }
+
+    /**
+     * @param array $data
+     * @return int|bool
+     */
+    public function insert(array $data)
+    {
+        $columns = array_keys($data);
+        $values  = array_values($data);
+        $preparedValues = ArrayHelper::replaceAllWith($values, Aliases::PREPARED_PLACE);
+
+        $sql = Query::insertPreset(
+            $this->targetTable,
+            implode(', ', $columns),
+            implode(', ', $preparedValues)
+        );
+
+        return $this->connect->insert($sql, $values);
     }
 }
