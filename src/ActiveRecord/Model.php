@@ -56,13 +56,13 @@ abstract class Model extends BaseObject
     /**
      * @var array
      */
-    private array $properties = [];
+    private array $attributes = [];
 
     /**
      * This array contains properties that are defined as hidden
      * @var array
      */
-    private array $protectedProperties = [];
+    private array $protectedAttributes = [];
 
     /**
      * @var bool
@@ -79,21 +79,21 @@ abstract class Model extends BaseObject
     }
 
     /**
-     * @param string $property
+     * @param string $attribute
      * @return bool
      */
-    private function isHidden(string $property)
+    private function isHidden(string $attribute)
     {
-        return in_array($property, $this->hidden);
+        return in_array($attribute, $this->hidden);
     }
 
     /**
-     * @param string $property
+     * @param string $attribute
      * @return bool
      */
-    private function isGuarded(string $property)
+    private function isGuarded(string $attribute)
     {
-        return in_array($property, $this->guarded);
+        return in_array($attribute, $this->guarded);
     }
 
     /**
@@ -105,44 +105,44 @@ abstract class Model extends BaseObject
     }
 
     /**
-     * @param string $property
+     * @param string $attribute
      * @param $value
      */
-    private function setProtectedProperty(string $property, $value)
+    private function setProtectedProperty(string $attribute, $value)
     {
-        $this->protectedProperties[$property] = $value;
+        $this->protectedAttributes[$attribute] = $value;
     }
 
-    private function getCustomGetter(string $property)
+    private function getCustomGetter(string $attribute)
     {
-        $property = CaseString::snake($property)->pascal();
-        return 'get' . $property . 'Property';
+        $attribute = CaseString::snake($attribute)->pascal();
+        return 'get' . $attribute . 'Attribute';
     }
 
-    private function hasCustomGetter(string $property)
+    private function hasCustomGetter(string $attribute)
     {
-        $getter = $this->getCustomGetter($property);
+        $getter = $this->getCustomGetter($attribute);
         return method_exists($this, $getter);
     }
 
-    private function getCustomSetter(string $property)
+    private function getCustomSetter(string $attribute)
     {
-        $property = CaseString::snake($property)->pascal();
-        return 'set' . $property . 'Property';
+        $attribute = CaseString::snake($attribute)->pascal();
+        return 'set' . $attribute . 'Attribute';
     }
 
-    private function hasCustomSetter(string $property)
+    private function hasCustomSetter(string $attribute)
     {
-        $setter = $this->getCustomGetter($property);
+        $setter = $this->getCustomGetter($attribute);
         return method_exists($this, $setter);
     }
 
     /**
      * @return array
      */
-    private function getChangedProperties()
+    private function getChangedAttributes()
     {
-        return array_diff($this->properties, $this->original);
+        return array_diff($this->attributes, $this->original);
     }
 
     /**
@@ -150,65 +150,90 @@ abstract class Model extends BaseObject
      */
     private function hasChanged()
     {
-        return !!count($this->getChangedProperties());
+        return !!count($this->getChangedAttributes());
     }
 
     /**
-     * @param $property
-     * @return mixed
+     * @param $attribute
+     * @return mixed|null
      */
-    public function __get($property)
+    public function getAttribute($attribute)
     {
-        if($this->isHidden($property))
+        if($this->isHidden($attribute))
         {
-            return $this->protectedProperties[$property];
+            return $this->protectedAttributes[$attribute];
         }
-        if($this->hasCustomGetter($property))
+        if($this->hasCustomGetter($attribute))
         {
-            $getter = $this->getCustomGetter($property);
-            return $this->$getter($this->properties[$property]);
+            $getter = $this->getCustomGetter($attribute);
+            return $this->$getter($this->attributes[$attribute]);
         }
 
-        return $this->properties[$property] ?? null;
+        return $this->properties[$attribute] ?? null;
     }
 
     /**
-     * @param $property
+     * @param $attribute
      * @param $value
      * @throws GuardException
      */
-    public function __set($property, $value)
+    public function setAttribute($attribute, $value)
     {
-        if(!isset($this->original[$property]))
+        if(!isset($this->original[$attribute]))
         {
-            $this->original[$property] = $value;
+            $this->original[$attribute] = $value;
         }
 
-        if($this->isGuarded($property))
+        if($this->isGuarded($attribute))
         {
-            throw new GuardException($property);
+            throw new GuardException($attribute);
         }
-        if($this->hasCustomSetter($property))
+        if($this->hasCustomSetter($attribute))
         {
-            $setter = $this->getCustomSetter($property);
+            $setter = $this->getCustomSetter($attribute);
             $this->$setter($value);
         }
-        if($this->isHidden($property))
+        if($this->isHidden($attribute))
         {
-            $this->setProtectedProperty($property, $value);
+            $this->setProtectedProperty($attribute, $value);
         }
 
-        $this->properties[$property] = $value;
+        $this->attributes[$attribute] = $value;
+    }
+
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * @param $attribute
+     * @return mixed
+     */
+    public function __get($attribute)
+    {
+        return $this->getAttribute($attribute);
+    }
+
+    /**
+     * @param $attribute
+     * @param $value
+     * @throws GuardException
+     */
+    public function __set($attribute, $value)
+    {
+        $this->setAttribute($attribute, $value);
     }
 
     /**
      * @param array $attributes
+     * @throws GuardException
      */
     public function load(array $attributes)
     {
-        foreach($attributes as $property => $value)
+        foreach($attributes as $attribute => $value)
         {
-            $this->$property = $value;
+            $this->setAttribute($attribute, $value);
         }
     }
 
@@ -258,16 +283,25 @@ abstract class Model extends BaseObject
     {
         if($this->recordAlreadyExists())
         {
-            return self::query()->
-                         update($this->getChangedProperties())->
-                         where($this->getPrimaryKey(), '=', $this->getPrimaryValue())->
-                         execute();
+            return $this->updateMyself();
         }
 
-        $this->setPrimaryValue(self::query()->insert($this->properties));
-        $this->exists = $this->getPrimaryValue() !== false;
+        $primaryKey = self::query()->insert($this->getAttributes());
+        $this->setPrimaryValue($primaryKey);
+        $this->exists = is_int($primaryKey);
 
         return $this->exists;
+    }
+
+    /**
+     * @return bool
+     */
+    public function updateMyself()
+    {
+        return self::query()->
+                     update($this->getChangedAttributes())->
+                     where($this->getPrimaryKey(), '=', $this->getPrimaryValue())->
+                     execute();
     }
 
     /**
