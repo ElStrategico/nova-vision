@@ -19,6 +19,11 @@ class Query
     private string $update = '';
 
     /**
+     * @var string
+     */
+    private string $delete = '';
+
+    /**
      * @var array
      */
     private array $joins = [];
@@ -48,8 +53,12 @@ class Query
      */
     public function getAsString()
     {
-        $sql = $this->getSelect();
-        $sql .= " " . $this->getUpdate();
+        $sql = $this->getUpdate() ? $this->getUpdate() :  $this->getSelect();
+        if($this->getDelete())
+        {
+            $sql = $this->getDelete();
+        }
+
         $sql .= " " . $this->getJoins();
         $sql .= " " . $this->getGroupBy();
         $sql .= " " . $this->getWhere();
@@ -84,6 +93,11 @@ class Query
         $this->select = "SELECT $columns FROM $table";
     }
 
+    public function clearSelect()
+    {
+        $this->select = '';
+    }
+
     /**
      * @return string
      */
@@ -92,9 +106,29 @@ class Query
         return $this->update;
     }
 
+    /**
+     * @param string $table
+     * @param string $data
+     */
     public function setUpdate(string $table, string $data)
     {
         $this->update = "UPDATE $table SET $data";
+    }
+
+    /**
+     * @return string
+     */
+    public function getDelete()
+    {
+        return $this->delete;
+    }
+
+    /**
+     * @param string $table
+     */
+    public function setDelete(string $table)
+    {
+        $this->delete = "DELETE FROM $table";
     }
 
     /**
@@ -108,9 +142,9 @@ class Query
     /**
      * @param string $column
      * @param string $operator
-     * @param string $value
+     * @param mixed $value
      */
-    public function setWhere(string $column, string $operator, string $value)
+    public function setWhere(string $column, string $operator, $value)
     {
         if(count($this->where))
         {

@@ -11,6 +11,6 @@ class FactoryModel
      */
     public static function factory(string $modelNamespace, array $attributes)
     {
-        return new $modelNamespace($attributes);
+        return new $modelNamespace($attributes, true);
     }
 }

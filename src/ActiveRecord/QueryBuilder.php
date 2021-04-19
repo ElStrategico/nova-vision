@@ -93,10 +93,21 @@ class QueryBuilder
         $updatable = [];
         foreach($data as $column => $value)
         {
-            $updatable[] = "$column = $value";
+            $updatable[] = "$column = ?";
+            $this->preparedParams[] = $value;
         }
 
-        $this->query->setUpdate(implode(',', $updatable), $this->targetTable);
+        $this->query->setUpdate($this->targetTable, implode(',', $updatable));
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function delete()
+    {
+        $this->query->setDelete($this->targetTable);
 
         return $this;
     }
@@ -146,10 +157,10 @@ class QueryBuilder
     /**
      * @param string $column
      * @param string $operator
-     * @param string $value
+     * @param mixed $value
      * @return $this
      */
-    public function where(string $column, string $operator, string $value)
+    public function where(string $column, string $operator, $value)
     {
         $this->query->setWhere($column, $operator, Aliases::PREPARED_PLACE);
         $this->preparedParams[] = $value;
