@@ -72,9 +72,12 @@ abstract class Model extends BaseObject
     /**
      * Model constructor.
      * @param array $attributes
+     * @param bool $exists
+     * @throws GuardException
      */
-    public function __construct(array $attributes = [])
+    public function __construct(array $attributes = [], $exists = false)
     {
+        $this->exists = $exists;
         $this->load($attributes);
     }
 
@@ -97,6 +100,25 @@ abstract class Model extends BaseObject
     }
 
     /**
+     * @param array $attributes
+     * @return array
+     */
+    private function sliceFillable(array $attributes)
+    {
+        $sliced = [];
+
+        foreach($this->fillable as $key)
+        {
+            if(isset($attributes[$key]))
+            {
+                $sliced[$key] = $attributes[$key];
+            }
+        }
+
+        return $sliced;
+    }
+
+    /**
      * @return bool
      */
     private function recordAlreadyExists()
@@ -113,18 +135,30 @@ abstract class Model extends BaseObject
         $this->protectedAttributes[$attribute] = $value;
     }
 
+    /**
+     * @param string $attribute
+     * @return string
+     */
     private function getCustomGetter(string $attribute)
     {
         $attribute = CaseString::snake($attribute)->pascal();
         return 'get' . $attribute . 'Attribute';
     }
 
+    /**
+     * @param string $attribute
+     * @return bool
+     */
     private function hasCustomGetter(string $attribute)
     {
         $getter = $this->getCustomGetter($attribute);
         return method_exists($this, $getter);
     }
 
+    /**
+     * @param string $attribute
+     * @return string
+     */
     private function getCustomSetter(string $attribute)
     {
         $attribute = CaseString::snake($attribute)->pascal();
@@ -169,7 +203,7 @@ abstract class Model extends BaseObject
             return $this->$getter($this->attributes[$attribute]);
         }
 
-        return $this->properties[$attribute] ?? null;
+        return $this->attributes[$attribute] ?? null;
     }
 
     /**
@@ -201,6 +235,9 @@ abstract class Model extends BaseObject
         $this->attributes[$attribute] = $value;
     }
 
+    /**
+     * @return array
+     */
     public function getAttributes()
     {
         return $this->attributes;
@@ -237,6 +274,9 @@ abstract class Model extends BaseObject
         }
     }
 
+    /**
+     * @return string
+     */
     public function getTable()
     {
         if(!$this->table)
@@ -268,38 +308,76 @@ abstract class Model extends BaseObject
      */
     public function getPrimaryValue()
     {
-        return $this->{$this->getPrimaryKey()};
+        $primaryKey = $this->getPrimaryKey();
+        return $this->getAttribute($primaryKey);
     }
 
+    /**
+     * @param $value
+     * @throws GuardException
+     */
     public function setPrimaryValue($value)
     {
-        $this->{$this->getPrimaryKey()} = $value;
+        $this->setAttribute($this->getPrimaryKey(), $value);
     }
 
     /**
      * @return bool
+     * @throws GuardException
      */
     public function save()
     {
+        $attributes = $this->sliceFillable($this->getAttributes());
+
         if($this->recordAlreadyExists())
         {
             return $this->updateMyself();
         }
 
-        $primaryKey = self::query()->insert($this->getAttributes());
-        $this->setPrimaryValue($primaryKey);
-        $this->exists = is_int($primaryKey);
+        $primaryKey = self::query()->insert($attributes);
+        if($primaryKey)
+        {
+            $this->setPrimaryValue($primaryKey);
+            $this->exists = true;
+        }
 
         return $this->exists;
     }
 
     /**
+     * @param array $attributes
+     * @return bool
+     * @throws GuardException
+     */
+    public function update(array $attributes)
+    {
+        $attributes = $this->sliceFillable($attributes);
+        $this->load($attributes);
+        return $this->updateMyself();
+    }
+
+    /**
+     * @return bool
+     */
+    public function delete()
+    {
+        return self::query()->
+                     delete()->
+                     where($this->getPrimaryKey(), '=', $this->getPrimaryValue())->
+                     execute();
+    }
+
+    /**
+     * Sync current record with database
+     *
      * @return bool
      */
     public function updateMyself()
     {
+        $attributes = $this->sliceFillable($this->getChangedAttributes());
+
         return self::query()->
-                     update($this->getChangedAttributes())->
+                     update($attributes)->
                      where($this->getPrimaryKey(), '=', $this->getPrimaryValue())->
                      execute();
     }
