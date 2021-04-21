@@ -27,6 +27,13 @@ interface IConnect
     public function execute(string $sql, array $prepareParams = []) : bool;
 
     /**
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function insert(string $sql, array $prepareParams = []);
+
+    /**
      * Fetch a data from database by SQL command
      *
      * @param string $sql
@@ -34,4 +41,22 @@ interface IConnect
      * @return array|null
      */
     public function fetch(string $sql, array $prepareParams = []);
+
+    /**
+     * Fetch a single row from database by SQL command
+     *
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function fetchOne(string $sql, array $prepareParams = []);
+
+    /**
+     * Fetch a scalar value from database by SQL command
+     *
+     * @param string $sql
+     * @param array $prepareParams
+     * @return mixed
+     */
+    public function scalarFetch(string $sql, array $prepareParams = []);
 }

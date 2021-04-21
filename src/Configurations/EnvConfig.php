@@ -14,7 +14,9 @@ class EnvConfig implements IConfig
 
     public function __construct()
     {
-        $this->dotEnv = Dotenv::createImmutable(__DIR__);
+        $rootDir = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT');
+        $this->dotEnv = Dotenv::createImmutable($rootDir);
+        $this->dotEnv->load();
     }
 
     /**
